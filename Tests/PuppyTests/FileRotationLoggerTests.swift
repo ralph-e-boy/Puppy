@@ -1,14 +1,14 @@
 import XCTest
 @testable import Puppy
 
-class FileRotationLoggerTests: XCTestCase, FileRotationLoggerDeletate {
+class FileRotationLoggerTests: XCTestCase, FileRotationLoggerDelegate {
 
     func fileRotationLogger(_ fileRotationLogger: FileRotationLogger, didArchiveFileURL: URL, toFileURL: URL) {
-        print("didArchive! didArchiveFileURL is \(didArchiveFileURL). toFileURL is \(toFileURL).")
+      debug("didArchive! didArchiveFileURL is \(didArchiveFileURL). toFileURL is \(toFileURL).")
     }
 
     func fileRotationLogger(_ fileRotationLogger: FileRotationLogger, didRemoveArchivedFileURL: URL) {
-        print("didRemove! didRemoveArchivedFileURL is \(didRemoveArchivedFileURL).")
+      debug("didRemove! didRemoveArchivedFileURL is \(didRemoveArchivedFileURL).")
     }
 
     override func setUpWithError() throws {

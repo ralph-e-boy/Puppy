@@ -9,7 +9,7 @@ public class FileRotationLogger: BaseLogger {
     private var fileHandle: FileHandle!
     private let fileURL: URL
 
-    public weak var delegate: FileRotationLoggerDeletate?
+    public weak var delegate: FileRotationLoggerDelegate?
 
     public init(_ label: String, fileURL: URL) throws {
         self.fileURL = fileURL
@@ -34,7 +34,7 @@ public class FileRotationLogger: BaseLogger {
                 // swiftlint:enable force_try
             }
         } catch {
-            print("seekToEnd error. error is \(error.localizedDescription).")
+          debug("seekToEnd error. error is \(error.localizedDescription).")
         }
 
         rotateFiles()
@@ -103,7 +103,7 @@ public class FileRotationLogger: BaseLogger {
                 try FileManager.default.moveItem(at: fileURL, to: archivedFileURL)
                 delegate?.fileRotationLogger(self, didArchiveFileURL: fileURL, toFileURL: archivedFileURL)
             } catch {
-                print("moving error. error.localizedDescription is \(error.localizedDescription).")
+              debug("moving error. error.localizedDescription is \(error.localizedDescription).")
             }
 
             // Removes old archived file
@@ -128,14 +128,14 @@ public class FileRotationLogger: BaseLogger {
                     }
                 }
             } catch {
-                print("archivedFileURLs error. error is \(error.localizedDescription).")
+              debug("archivedFileURLs error. error is \(error.localizedDescription).")
             }
 
             do {
                 debug("will openFile in rotateFiles.")
                 try openFile()
             } catch {
-                print("openFile error in rotating. error is \(error.localizedDescription).")
+              debug("openFile error in rotating. error is \(error.localizedDescription).")
             }
 
         }
@@ -143,7 +143,7 @@ public class FileRotationLogger: BaseLogger {
     }
 }
 
-public protocol FileRotationLoggerDeletate: class {
+public protocol FileRotationLoggerDelegate: class {
     func fileRotationLogger(_ fileRotationLogger: FileRotationLogger, didArchiveFileURL: URL, toFileURL: URL)
     func fileRotationLogger(_ fileRotationLogger: FileRotationLogger, didRemoveArchivedFileURL: URL)
 }

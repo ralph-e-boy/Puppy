@@ -4,7 +4,7 @@ public class FileLogger: BaseLogger {
 
     public var flushmode: FlushMode = .always
 
-    private var fileHandle: FileHandle!
+    private var fileHandle: FileHandle?
     private let fileURL: URL
 
     public init(_ label: String, fileURL: URL) throws {
@@ -20,8 +20,12 @@ public class FileLogger: BaseLogger {
     }
 
     public override func log(_ level: LogLevel, string: String) {
+      guard let fh = fileHandle else {
+        debug("Could not log: no filehandle")
+        return
+      }
         do {
-            _ = try fileHandle?.seekToEndCompatible()
+            _ = try fh.seekToEndCompatible()
             if let data = (string + "\r\n").data(using: .utf8) {
                 // swiftlint:disable force_try
                 try! fileHandle?.writeCompatible(contentsOf: data)
@@ -31,24 +35,31 @@ public class FileLogger: BaseLogger {
                 }
             }
         } catch {
-            print("seekToEnd error. error is \(error.localizedDescription).")
+          debug("seekToEnd error. error is \(error.localizedDescription).")
         }
     }
 
     public func delete(_ url: URL) throws {
-        do {
-            try queue!.sync {
-                try FileManager.default.removeItem(at: url)
-            }
-        } catch {
-            throw FileError.deletingFailed(at: url)
+      guard let q = queue else {
+        throw FileError.deletingFailed(at: url)
+      }
+      do {
+        try q.sync {
+          try FileManager.default.removeItem(at: url)
         }
+      } catch {
+        throw FileError.deletingFailed(at: url)
+      }
     }
 
     public func flush() {
-        queue!.sync {
-            fileHandle?.synchronizeFile()
-        }
+      guard let q = queue,
+            let fh = fileHandle else {
+        return
+      }
+      q.sync {
+        fh.synchronizeFile()
+      }
     }
 
     private func validateFileURL(_ url: URL) throws {
@@ -58,6 +69,7 @@ public class FileLogger: BaseLogger {
     }
 
     private func openFile() throws {
+
         closeFile()
         let directoryURL = fileURL.deletingLastPathComponent()
         do {
@@ -78,21 +90,19 @@ public class FileLogger: BaseLogger {
             debug("filePath exists. filePath is \(fileURL.path).")
         }
 
-        if fileHandle == nil {
-            do {
-                fileHandle = try FileHandle(forWritingTo: fileURL)
-            } catch {
-                throw FileError.writingFailed(at: fileURL)
-            }
-        }
+      do {
+        fileHandle = try FileHandle(forWritingTo: fileURL)
+      } catch {
+        throw FileError.writingFailed(at: fileURL)
+      }
     }
 
     private func closeFile() {
-        if fileHandle != nil {
-            fileHandle.synchronizeFile()
-            fileHandle.closeFile()
-            fileHandle = nil
-        }
+      guard let fh = fileHandle else {
+        return
+      }
+      fh.synchronizeFile()
+      fh.closeFile()
     }
 }
 
